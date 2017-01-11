@@ -88,10 +88,10 @@ request.env['tracker'] = {
 
 * `:anonymize_ip` -  sets the tracker to remove the last octet from all IP addresses, see https://developers.google.com/analytics/devguides/collection/gajs/methods/gaJSApi_gat?hl=de#_gat._anonymizeIp for details.
 * `:cookie_domain` -  sets the domain name for the [GATC cookies](https://developers.google.com/analytics/devguides/collection/analyticsjs/domains#implementation). If not set its the website domain, with the www. prefix removed.
-* `:user_id` -  defines a proc to set the [userId](https://developers.google.com/analytics/devguides/collection/analyticsjs/cookies-user-id#user_id). Ex: `user_id: lambda { |env| env['rack.session']['user_id'] }` would return the user_id from the session.
+* `:user_id` -  defines a proc to set the [userId](https://developers.google.com/analytics/devguides/collection/analyticsjs/user-id). Ex: `user_id: lambda { |env| env['rack.session']['user_id'] }` would return the user_id from the session.
 * `:site_speed_sample_rate` - Defines a new sample set size for Site Speed data collection, see https://developers.google.com/analytics/devguides/collection/gajs/methods/gaJSApiBasicConfiguration?hl=de#_gat.GA_Tracker_._setSiteSpeedSampleRate
 * `:adjusted_bounce_rate_timeouts` - An array of times in seconds that the tracker will use to set timeouts for adjusted bounce rate tracking. See http://analytics.blogspot.ca/2012/07/tracking-adjusted-bounce-rate-in-google.html for details.
-* `:enhanced_link_attribution` - Enables [Enhanced Link Attribution](https://developers.google.com/analytics/devguides/collection/analyticsjs/enhanced-link-attribution).
+* `:enhanced_link_attribution` - Enables [Enhanced Link Attribution](https://developers.google.com/analytics/devguides/collection/analyticsjs/advanced#enhancedlink).
 * `:advertising` - Enables [Display Features](https://developers.google.com/analytics/devguides/collection/analyticsjs/display-features).
 * `:ecommerce` - Enables [Ecommerce Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/ecommerce).
 * `:enhanced_ecommerce` - Enables [Enhanced Ecommerce Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/enhanced-ecommerce)
@@ -254,16 +254,26 @@ To add events or variables to the dataLayer from the server side, just call the 
 
 ### Facebook
 
-* `custom_audience` - adds the [Custom audience](https://developers.facebook.com/docs/reference/ads-api/custom-audience-website-faq) segmentation pixel
+* `Facebook Pixel` - adds the [Facebook Pixel](https://www.facebook.com/business/help/952192354843755)
 
-#### Conversions
+Use in conjunction with the [Facebook Helper](https://developers.facebook.com/docs/facebook-pixel/pixel-helper) to confirm your event fires correctly.
 
-To track [Conversions](https://www.facebook.com/help/435189689870514) from the server side just call the `tracker` method in your controller.
+First, add the following to your config:
+
+```ruby
+  config.middleware.use(Rack::Tracker) do
+    handler :facebook, { id: 'PIXEL_ID' }
+  end
+```
+
+#### Standard Events
+
+To track Standard Events from the server side just call the `tracker` method in your controller.
 
 ```ruby
   def show
     tracker do |t|
-      t.facebook :track, { id: '123456789', value: 1, currency: 'EUR' }
+      t.facebook :track, { type: 'Purchase', options: { value: 100, currency: 'USD' } }
     end
   end
 ```
@@ -271,8 +281,9 @@ To track [Conversions](https://www.facebook.com/help/435189689870514) from the s
 Will result in the following:
 
 ```javascript
-  window._fbq.push(["track", "123456789", {'value': 1, 'currency': 'EUR'}]);
+  fbq("track", "Purchase", {"value":"100.0","currency":"USD"});
 ```
+
 ### Visual website Optimizer (VWO)
 Just integrate the handler with your matching account_id and you will be ready to go
 
